@@ -37,3 +37,11 @@ ENV/
 # IPython
 profile_default/
 ipython_config.py
+
+.vscode
+wandb
+.ruff_cache
+data/*
+weights
+.idea
+.DS_Store

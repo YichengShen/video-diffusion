@@ -1,0 +1,31 @@
+method_name: ddpm
+experiment_name: debug1
+
+device: cuda
+dataset_path: data/mmnist_easy.pt
+train_batch_size: 64 # 64
+num_frames: 5
+
+num_epochs: 1
+train_steps: 5050
+learning_rate: 5.0e-4
+
+output_dir: ddpm-test
+
+seed: 0
+
+ema:
+  decay: 0.995
+
+noise_scheduler:
+  num_diffusion_steps: 1000  # 1000
+  beta_start: 1.0e-4
+  beta_end: 0.02
+
+wandb:
+  use_wandb: true
+  group: train
+  tags: [ test, debug ]
+  save_weights_to_wandb: true
+  steps_to_log_images: 1000
+
