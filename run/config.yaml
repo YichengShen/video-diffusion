@@ -22,6 +22,10 @@ noise_scheduler:
   beta_start: 1.0e-4
   beta_end: 0.02
 
+infer:
+  trained_weights: weights/ddpm-debug1
+  num_frames_to_infer: 12
+
 wandb:
   use_wandb: true
   group: train
