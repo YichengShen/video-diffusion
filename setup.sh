@@ -10,8 +10,10 @@ cd "data"
 
 # List includes Google drive file IDs and their corresponding names
 declare -A files
-#files["mmnist_easy"]="1TYVxQBCrK-6NxfKZ_hfgaoHNLCx17IK4"
-files["mmnist_medium"]="1KREjVsR62_PxYUVjAUYkpi6uMVS1A77m"
+files["mmnist_easy"]="1u-ewwUYwjwJ10pu7Qbbk6BZ90gesz_yM"
+files["mmnist_medium"]="1tDAbCuKWVdiMaxx9wJvU6FwJESfr6fT1"
+files["mmnist_hard"]="1iia_6WMOroDKHU5VQcmfBYcqzRJz7zkC"
+files["mmnist_random"]="18DCIEVBYQf6KKh_APXjDVNMLLcp5ekkh"
 
 # Download and unzip files if they don't exist
 for file_key in "${!files[@]}"
