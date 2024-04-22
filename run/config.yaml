@@ -1,10 +1,10 @@
 method_name: ddpm
-experiment_name: debug1
+experiment_name: mmnist-medium
 
 device: cuda
 dataset_dir: data/mmnist-medium
 train_batch_size: 64
-num_frames: 5
+num_frames: 40
 
 num_epochs: 1
 train_steps: 5050
@@ -23,7 +23,7 @@ noise_scheduler:
   beta_end: 0.02
 
 infer:
-  trained_weights: weights/ddpm-debug1
+  trained_weights: weights/ddpm-mmnist-medium
   num_frames_to_infer: 12
 
 wandb:

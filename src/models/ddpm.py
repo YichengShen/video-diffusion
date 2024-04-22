@@ -92,7 +92,7 @@ class FrameDiffusion:
         return torch.cat(next_frames, dim=1)
 
     def log_images(self):
-        """Log images to wandb and save them to disk"""
+        """Log images to wandb"""
 
         def to_image(img):
             return wandb.Image(torch.cat(img.split(1), dim=-1).cpu().numpy())
@@ -101,6 +101,18 @@ class FrameDiffusion:
         wandb.log({"sampled_images": [to_image(img) for img in sampled_images]})
         ema_sampled_images = self.sample(use_ema=True)
         wandb.log({"ema_sampled_images": [to_image(img) for img in ema_sampled_images]})
+
+    def log_multiple_images(self, use_ema=True):
+        """Log multiple generated frames to wandb"""
+
+        def to_image(img):
+            return wandb.Image(torch.cat(img.split(1), dim=-1).cpu().numpy())
+
+        previous_frames, next_frames = self.data_loader.get_batch(batch_size=2)
+        model = self.ema_model if use_ema else self.model
+        generated_frames = self.sample_more(model, previous_frames, n=10)
+        complete_frames = torch.cat([previous_frames, generated_frames], dim=1)
+        wandb.log({"sampled_images": [to_image(frame) for frame in complete_frames]})
 
     def train_step(self, loss):
         self.optimizer.zero_grad()
@@ -137,13 +149,14 @@ class FrameDiffusion:
             pbar.comment = f"MSE={loss.item():2.3f}"
 
             if i % self.cfg['wandb']['steps_to_log_images'] == 0:
-                self.log_images()
+                # self.log_images()
+                self.log_multiple_images()
 
     def load(self, model_cpkt_path, model_ckpt="ckpt.pt", ema_model_ckpt="ema_ckpt.pt"):
         self.model.load_state_dict(torch.load(
-            os.path.join(model_cpkt_path, model_ckpt)))
+            os.path.join(model_cpkt_path, model_ckpt), map_location=self.cfg['device']))
         self.ema_model.load_state_dict(torch.load(
-            os.path.join(model_cpkt_path, ema_model_ckpt)))
+            os.path.join(model_cpkt_path, ema_model_ckpt), map_location=self.cfg['device']))
 
     def save_model(self, model_name, epoch=-1):
         """Save model locally and on wandb"""
