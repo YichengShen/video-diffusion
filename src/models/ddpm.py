@@ -13,10 +13,10 @@ from src.models.ema import EMA
 
 
 class FrameDiffusion:
-    def __init__(self, cfg, dataset, model, accelerator):
+    def __init__(self, cfg, data_loader, model, accelerator):
         self.cfg = cfg
         self.device = torch.device(self.cfg['device'])
-        self.dataset = dataset
+        self.data_loader = data_loader
         self.accelerator = accelerator
         self.model = model.to(self.device)
         self.ema_model = copy.deepcopy(self.model).eval().requires_grad_(False)
@@ -52,16 +52,10 @@ class FrameDiffusion:
         noisy_image = x_scaled + noise_scaled
         return noisy_image, noise
 
-    def get_batch(self, batch_size):
-        frames = self.cfg['num_frames']
-        ix = torch.randint(len(self.dataset), (batch_size,))
-        b = self.dataset[ix].squeeze().to(self.device)
-        return b[:, :frames], b[:, [frames]]
-
     @torch.inference_mode()
     def sample(self, batch_size=10, use_ema=False):
         logging.info(f"Sampling new images....")
-        previous_frames, next_frames = self.get_batch(batch_size=batch_size)
+        previous_frames, next_frames = self.data_loader.get_batch(batch_size=batch_size)
         model = self.ema_model if use_ema else self.model
         return self._sample(model, previous_frames, next_frames)
 
@@ -121,7 +115,7 @@ class FrameDiffusion:
         self.model.train()
         pbar = progress_bar(range(train_steps))
         for i in pbar:
-            previous_frames, next_frames = self.get_batch(batch_size=self.cfg['train_batch_size'])
+            previous_frames, next_frames = self.data_loader.get_batch(batch_size=self.cfg['train_batch_size'])
             previous_frames, next_frames = self.accelerator.prepare(previous_frames, next_frames)
 
             t = self.sample_timesteps(previous_frames.shape[0])  # batch size

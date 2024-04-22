@@ -14,6 +14,8 @@
 3. Run `bash setup.sh`
 
     - This will download data, install dependencies, etc.
+    - Then,
+      run `export LD_LIBRARY_PATH=$(echo $LD_LIBRARY_PATH | tr ':' '\n' | grep -v '/usr/local/cuda' | paste -sd ':' -)`
 
 4. Activate venv:
 

@@ -2,8 +2,8 @@ method_name: ddpm
 experiment_name: debug1
 
 device: cuda
-dataset_path: data/mmnist_easy.pt
-train_batch_size: 64 # 64
+dataset_dir: data/mmnist-medium
+train_batch_size: 64
 num_frames: 5
 
 num_epochs: 1

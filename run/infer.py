@@ -7,6 +7,7 @@ from accelerate import Accelerator
 import src.models.unet as my_unet
 from src.models.ddpm import FrameDiffusion
 from src.utils.config_utils import load_config
+from src.utils.data_loader import DataLoader
 
 
 def to_image(img):
@@ -33,18 +34,18 @@ def main():
     else:
         accelerator = Accelerator()
 
-    data = torch.load(cfg['dataset_path'])
+    data_loader = DataLoader(cfg)
 
     model = my_unet.create_unet(in_channels=cfg['num_frames'] + 1, out_channels=1)
     diffuser = FrameDiffusion(
         cfg=cfg,
-        dataset=data,
+        data_loader=data_loader,
         model=model,
         accelerator=accelerator)
 
     diffuser.load(cfg['infer']['trained_weights'])
 
-    previous_frames, next_frames = diffuser.get_batch(batch_size=4)
+    previous_frames, next_frames = data_loader.get_batch(batch_size=4)
     model = diffuser.ema_model
     next_frames = diffuser.sample_more(model, previous_frames, n=cfg['infer']['num_frames_to_infer'])
     t = create_predictions_table(previous_frames, next_frames)

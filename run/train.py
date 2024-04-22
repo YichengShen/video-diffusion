@@ -1,7 +1,6 @@
 from contextlib import nullcontext
 from functools import partial
 
-import torch
 import wandb
 from accelerate import Accelerator
 from torch.optim import Adam
@@ -10,6 +9,7 @@ from torch.optim.lr_scheduler import OneCycleLR
 import src.models.unet as my_unet
 from src.models.ddpm import FrameDiffusion
 from src.utils.config_utils import load_config
+from src.utils.data_loader import DataLoader
 
 
 def main():
@@ -22,12 +22,12 @@ def main():
     else:
         accelerator = Accelerator()
 
-    data = torch.load(cfg['dataset_path'])
+    data_loader = DataLoader(cfg)
 
     model = my_unet.create_unet(in_channels=cfg['num_frames'] + 1, out_channels=1)
     diffuser = FrameDiffusion(
         cfg=cfg,
-        dataset=data,
+        data_loader=data_loader,
         model=model,
         accelerator=accelerator)
 
