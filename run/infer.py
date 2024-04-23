@@ -67,32 +67,33 @@ def main():
 
     exp_name = cfg['method_name'] + '-' + cfg['experiment_name']
 
-    if cfg['device'] == "cpu":
-        accelerator = Accelerator(device_placement=False, cpu=True)
-    else:
-        accelerator = Accelerator()
-
-    data_loader = DataLoader(cfg)
-
-    model = my_unet.create_unet(in_channels=cfg['num_frames'] + 1, out_channels=1)
-    diffuser = FrameDiffusion(
-        cfg=cfg,
-        data_loader=data_loader,
-        model=model,
-        accelerator=accelerator)
-
-    diffuser.load(cfg['infer']['trained_weights'])
-
-    previous_frames, next_frames = data_loader.get_batch(batch_size=cfg['infer']['num_videos_to_generate'])
-    model = diffuser.ema_model
-    next_frames = diffuser.sample_more(model, previous_frames, n=cfg['infer']['num_frames_to_infer'])
-    table = create_predictions_table(previous_frames, next_frames)
-
     with wandb.init(project=exp_name, group="preds", config=cfg) if cfg['wandb']['use_wandb'] else nullcontext():
-        wandb.log({"ema_preds_table": table})
+        if cfg['device'] == "cpu":
+            accelerator = Accelerator(device_placement=False, cpu=True)
+        else:
+            accelerator = Accelerator()
+
+        data_loader = DataLoader(cfg)
+
+        model = my_unet.create_unet(in_channels=cfg['num_frames'] + 1, out_channels=1)
+        diffuser = FrameDiffusion(
+            cfg=cfg,
+            data_loader=data_loader,
+            model=model,
+            accelerator=accelerator)
+
+        diffuser.load(cfg['infer']['trained_weights'])
+
+        previous_frames, next_frames = data_loader.get_batch(batch_size=cfg['infer']['num_videos_to_generate'])
+        model = diffuser.ema_model
+        next_frames = diffuser.sample_more(model, previous_frames, n=cfg['infer']['num_frames_to_infer'])
+
         for i, (pf, pred) in enumerate(zip(previous_frames, next_frames)):
             video = log_saved_video_file(pf, pred)
             wandb.log({f"video_{i}": video})
+
+        table = create_predictions_table(previous_frames, next_frames)
+        wandb.log({"ema_preds_table": table})
 
 
 if __name__ == "__main__":
