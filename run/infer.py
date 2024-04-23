@@ -54,15 +54,12 @@ def to_saved_video_file(frames, file_path='video.mp4', fps=10):
     return file_path
 
 
-def log_saved_video_files(previous_frames, next_frames):
-    videos = []
-    for pf, pred in zip(previous_frames, next_frames):
-        video_frames = torch.cat([pf, pred], dim=0)
-        video_frames = video_frames.unsqueeze(1)
-        video_frames_np = video_frames.cpu().numpy().transpose(0, 2, 3, 1)
-        video_path = to_saved_video_file(video_frames_np)
-        videos.append(wandb.Video(video_path))
-    return videos
+def log_saved_video_file(pf, pred):
+    video_frames = torch.cat([pf, pred], dim=0)
+    video_frames = video_frames.unsqueeze(1)
+    video_frames_np = video_frames.cpu().numpy().transpose(0, 2, 3, 1)
+    video_path = to_saved_video_file(video_frames_np)
+    return wandb.Video(video_path)
 
 
 def main():
@@ -90,12 +87,12 @@ def main():
     model = diffuser.ema_model
     next_frames = diffuser.sample_more(model, previous_frames, n=cfg['infer']['num_frames_to_infer'])
     table = create_predictions_table(previous_frames, next_frames)
-    videos = log_saved_video_files(previous_frames, next_frames)
 
     with wandb.init(project=exp_name, group="preds", config=cfg) if cfg['wandb']['use_wandb'] else nullcontext():
         wandb.log({"ema_preds_table": table})
-        for idx, video in enumerate(videos):
-            wandb.log({f"video_{idx}": video})
+        for i, (pf, pred) in enumerate(zip(previous_frames, next_frames)):
+            video = log_saved_video_file(pf, pred)
+            wandb.log({f"video_{i}": video})
 
 
 if __name__ == "__main__":
