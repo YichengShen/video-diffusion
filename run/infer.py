@@ -1,5 +1,7 @@
 from contextlib import nullcontext
 
+import cv2
+import numpy as np
 import torch
 import wandb
 from accelerate import Accelerator
@@ -14,6 +16,21 @@ def to_image(img):
     return wandb.Image(torch.cat(img.split(1), dim=-1).cpu().numpy())
 
 
+# def to_video(frames):
+#     frames = frames.cpu().numpy()
+#     frames = np.clip(frames * 255, 0, 255).astype(np.uint8)
+#     return wandb.Video(frames, fps=10, format="mp4")
+#
+# def log_videos(previous_frames, next_frames):
+#     videos = []
+#     for pf, pred in zip(previous_frames, next_frames):
+#         video_frames = torch.cat([pf, pred], dim=0)
+#         video_frames = video_frames.unsqueeze(1)
+#         video = to_video(video_frames)
+#         videos.append(video)
+#     return videos
+
+
 def create_predictions_table(previous_frames, next_frames):
     previous_frames_imgs = [to_image(s) for s in previous_frames]
     predictions = [to_image(s) for s in next_frames]
@@ -22,6 +39,30 @@ def create_predictions_table(previous_frames, next_frames):
     for pf, pred in zip(previous_frames_imgs, predictions):
         table.add_data(pf, pred)
     return table
+
+
+def to_saved_video_file(frames, file_path='video.mp4', fps=10):
+    frames = np.clip(frames * 255, 0, 255).astype(np.uint8)
+    fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+    height, width = frames[0].shape[:2]
+    out = cv2.VideoWriter(file_path, fourcc, fps, (width, height))
+
+    for frame in frames:
+        color_frame = cv2.applyColorMap(frame, cv2.COLORMAP_BONE)
+        out.write(color_frame)
+    out.release()
+    return file_path
+
+
+def log_saved_video_files(previous_frames, next_frames):
+    videos = []
+    for pf, pred in zip(previous_frames, next_frames):
+        video_frames = torch.cat([pf, pred], dim=0)
+        video_frames = video_frames.unsqueeze(1)
+        video_frames_np = video_frames.cpu().numpy().transpose(0, 2, 3, 1)
+        video_path = to_saved_video_file(video_frames_np)
+        videos.append(wandb.Video(video_path))
+    return videos
 
 
 def main():
@@ -45,13 +86,16 @@ def main():
 
     diffuser.load(cfg['infer']['trained_weights'])
 
-    previous_frames, next_frames = data_loader.get_batch(batch_size=4)
+    previous_frames, next_frames = data_loader.get_batch(batch_size=2)
     model = diffuser.ema_model
     next_frames = diffuser.sample_more(model, previous_frames, n=cfg['infer']['num_frames_to_infer'])
-    t = create_predictions_table(previous_frames, next_frames)
+    table = create_predictions_table(previous_frames, next_frames)
+    videos = log_saved_video_files(previous_frames, next_frames)
 
     with wandb.init(project=exp_name, group="preds", config=cfg) if cfg['wandb']['use_wandb'] else nullcontext():
-        wandb.log({"ema_preds_table": t})
+        wandb.log({"ema_preds_table": table})
+        for idx, video in enumerate(videos):
+            wandb.log({f"video_{idx}": video})
 
 
 if __name__ == "__main__":

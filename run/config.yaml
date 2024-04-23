@@ -24,7 +24,7 @@ noise_scheduler:
 
 infer:
   trained_weights: weights/ddpm-mmnist-medium
-  num_frames_to_infer: 12
+  num_frames_to_infer: 100
 
 wandb:
   use_wandb: true

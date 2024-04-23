@@ -19,6 +19,9 @@ dependencies = [
     "gdown>=5.1.0",
     "torch==2.2.0",
     "torchvision==0.17.0",
+    "moviepy>=1.0.3",
+    "imageio>=2.34.1",
+    "opencv-python>=4.9.0.80",
 ]
 readme = "README.md"
 requires-python = ">= 3.11.6"
