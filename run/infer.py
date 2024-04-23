@@ -83,7 +83,7 @@ def main():
 
     diffuser.load(cfg['infer']['trained_weights'])
 
-    previous_frames, next_frames = data_loader.get_batch(batch_size=2)
+    previous_frames, next_frames = data_loader.get_batch(batch_size=cfg['infer']['num_videos_to_generate'])
     model = diffuser.ema_model
     next_frames = diffuser.sample_more(model, previous_frames, n=cfg['infer']['num_frames_to_infer'])
     table = create_predictions_table(previous_frames, next_frames)
