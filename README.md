@@ -25,6 +25,10 @@
 
    `python3 -m run.train`
 
+6. To do inference
+
+   `python3 -m run.infer`
+
 ## How to use rye
 
 - Sync: `rye sync`

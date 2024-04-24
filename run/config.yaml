@@ -1,13 +1,13 @@
 method_name: ddpm
-experiment_name: mmnist-medium
+experiment_name: mmnist-hard
 
 device: cuda
-dataset_dir: data/mmnist-medium
+dataset_dir: data/mmnist-hard
 train_batch_size: 64
 num_frames: 40
 
 num_epochs: 1
-train_steps: 5050
+train_steps: 5050 
 learning_rate: 5.0e-4
 
 output_dir: ddpm-test
@@ -23,7 +23,7 @@ noise_scheduler:
   beta_end: 0.02
 
 infer:
-  trained_weights: weights/ddpm-mmnist-medium
+  trained_weights: weights/ddpm-mmnist-hard
   num_frames_to_infer: 100
   num_videos_to_generate: 2
 
