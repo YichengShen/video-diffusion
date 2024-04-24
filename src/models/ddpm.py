@@ -110,7 +110,8 @@ class FrameDiffusion:
 
         previous_frames, next_frames = self.data_loader.get_batch(batch_size=2)
         model = self.ema_model if use_ema else self.model
-        generated_frames = self.sample_more(model, previous_frames, n=10)
+        generated_frames = self.sample_more(model, previous_frames,
+                                            n=self.cfg['wandb']['num_images_to_infer_during_training'])
         complete_frames = torch.cat([previous_frames, generated_frames], dim=1)
         wandb.log({"sampled_images": [to_image(frame) for frame in complete_frames]})
 

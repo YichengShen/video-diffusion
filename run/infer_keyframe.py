@@ -1,3 +1,4 @@
+import os
 from contextlib import nullcontext
 
 import cv2
@@ -10,25 +11,11 @@ import src.models.unet as my_unet
 from src.models.ddpm import FrameDiffusion
 from src.utils.config_utils import load_config
 from src.utils.data_loader import DataLoader
+from src.utils.data_loader_keyframe import KeyFrameDataLoader
 
 
 def to_image(img):
     return wandb.Image(torch.cat(img.split(1), dim=-1).cpu().numpy())
-
-
-# def to_video(frames):
-#     frames = frames.cpu().numpy()
-#     frames = np.clip(frames * 255, 0, 255).astype(np.uint8)
-#     return wandb.Video(frames, fps=10, format="mp4")
-#
-# def log_videos(previous_frames, next_frames):
-#     videos = []
-#     for pf, pred in zip(previous_frames, next_frames):
-#         video_frames = torch.cat([pf, pred], dim=0)
-#         video_frames = video_frames.unsqueeze(1)
-#         video = to_video(video_frames)
-#         videos.append(video)
-#     return videos
 
 
 def create_predictions_table(previous_frames, next_frames):
@@ -65,7 +52,7 @@ def log_saved_video_file(pf, pred):
 def main():
     cfg = load_config('run/config.yaml')
 
-    exp_name = cfg['method_name'] + '-' + cfg['experiment_name']
+    exp_name = cfg['method_name'] + '-' + cfg['experiment_name'] + '-keyframe'
 
     with wandb.init(project=exp_name, group="preds", config=cfg) if cfg['wandb']['use_wandb'] else nullcontext():
         if cfg['device'] == "cpu":
@@ -74,26 +61,35 @@ def main():
             accelerator = Accelerator()
 
         data_loader = DataLoader(cfg)
+        keyframe_data_loader = KeyFrameDataLoader(cfg)
 
         model = my_unet.create_unet(in_channels=cfg['num_frames'] + 1, out_channels=1)
+        keyframe_model = my_unet.create_unet(in_channels=cfg['num_frames'] + 1, out_channels=1)
+
         diffuser = FrameDiffusion(
             cfg=cfg,
             data_loader=data_loader,
             model=model,
             accelerator=accelerator)
-
         diffuser.load(cfg['infer']['trained_weights'])
 
-        previous_frames, next_frames = data_loader.get_batch(batch_size=cfg['infer']['num_videos_to_generate'])
-        model = diffuser.ema_model
-        next_frames = diffuser.sample_more(model, previous_frames, n=cfg['infer']['num_frames_to_infer'])
+        keyframe_diffuser = FrameDiffusion(
+            cfg=cfg,
+            data_loader=data_loader,
+            model=model,
+            accelerator=accelerator)
+        keyframe_diffuser.load(cfg['keyframe_model']['trained_weights'])
 
-        for i, (pf, pred) in enumerate(zip(previous_frames, next_frames)):
-            video = log_saved_video_file(pf, pred)
-            wandb.log({f"video_{i}": video})
+        batch_files = [os.path.join(cfg['dataset_dir'], f) for f in os.listdir(cfg['dataset_dir']) if f.endswith('.pt')]
+        full_video = torch.load(batch_files[0])[1].to(cfg['device'])
 
-        table = create_predictions_table(previous_frames, next_frames)
-        wandb.log({"ema_preds_table": table})
+        model = keyframe_diffuser.ema_model
+        for i in range(0, full_video.size(0), cfg['keyframe_model']['num_frames_to_skip_per_keyframe']):
+            previous_frame = full_video[i].unsqueeze(0)
+            keyframe = keyframe_diffuser.sample_more(model, previous_frame, n=1)
+            keyframe = keyframe.squeeze().unsqueeze(2)
+            keyframe = keyframe.detach().cpu().numpy()
+            wandb.log({f'keyframe_{i}': wandb.Image(keyframe)})
 
 
 if __name__ == "__main__":
