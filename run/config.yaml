@@ -1,14 +1,14 @@
 method_name: ddpm
-experiment_name: mmnist-medium
+experiment_name: debug1
 
 device: cuda
 dataset_dir: data/mmnist-medium
-train_batch_size: 64
+train_batch_size: 16
 num_frames: 1
 
 num_epochs: 1
-train_steps: 6050
-learning_rate: 5.0e-4
+train_steps: 2048 # 6050
+learning_rate: 1.0e-3 # 5.0e-4
 
 output_dir: ddpm-test
 
@@ -18,7 +18,7 @@ ema:
   decay: 0.995
 
 noise_scheduler:
-  num_diffusion_steps: 1000  # 1000
+  num_diffusion_steps: 100  # 1000
   beta_start: 1.0e-4
   beta_end: 0.02
 
@@ -32,10 +32,16 @@ hierarchical_infer:
   num_frames_to_generate_after_each_key_frame: 3
   output_fps: 5
 
+keyframe_model:
+  trained_weights: weights/ddpm-mmnist-medium-keyframe
+  num_frames_to_skip_per_keyframe: 3
+  limit_batch_size: 2
+
 wandb:
   use_wandb: true
   group: train
   tags: [ test, debug ]
   save_weights_to_wandb: true
-  steps_to_log_images: 1000
+  steps_to_log_images: 100
+  num_images_to_infer_during_training: 1 # Set to 5 for normal model; 1 for keyframe model
 
