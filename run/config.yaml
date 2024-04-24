@@ -4,10 +4,10 @@ experiment_name: mmnist-medium
 device: cuda
 dataset_dir: data/mmnist-medium
 train_batch_size: 64
-num_frames: 40
+num_frames: 1
 
 num_epochs: 1
-train_steps: 5050
+train_steps: 6050
 learning_rate: 5.0e-4
 
 output_dir: ddpm-test
@@ -26,6 +26,11 @@ infer:
   trained_weights: weights/ddpm-mmnist-medium
   num_frames_to_infer: 100
   num_videos_to_generate: 2
+
+hierarchical_infer:
+  total_num_frames_to_infer: 20
+  num_frames_to_generate_after_each_key_frame: 3
+  output_fps: 5
 
 wandb:
   use_wandb: true
