@@ -3,12 +3,12 @@ experiment_name: mmnist-medium
 
 device: cuda
 dataset_dir: data/mmnist-medium
-train_batch_size: 64
-num_frames: 40
+train_batch_size: 4
+num_frames: 1
 
 num_epochs: 1
-train_steps: 5050
-learning_rate: 5.0e-4
+train_steps: 2048
+learning_rate: 1.0e-3
 
 output_dir: ddpm-test
 
@@ -18,7 +18,7 @@ ema:
   decay: 0.995
 
 noise_scheduler:
-  num_diffusion_steps: 1000  # 1000
+  num_diffusion_steps: 100
   beta_start: 1.0e-4
   beta_end: 0.02
 
@@ -32,5 +32,5 @@ wandb:
   group: train
   tags: [ test, debug ]
   save_weights_to_wandb: true
-  steps_to_log_images: 1000
+  steps_to_log_images: 100
 
