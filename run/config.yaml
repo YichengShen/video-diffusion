@@ -1,14 +1,14 @@
 method_name: ddpm
-experiment_name: debug1
+experiment_name: mmnist-hard
 
 device: cuda
-dataset_dir: data/mmnist-medium
-train_batch_size: 16
-num_frames: 1
+dataset_dir: data/mmnist-hard
+train_batch_size: 64
+num_frames: 40
 
 num_epochs: 1
-train_steps: 2048 # 6050
-learning_rate: 1.0e-3 # 5.0e-4
+train_steps: 5050 
+learning_rate: 5.0e-4
 
 output_dir: ddpm-test
 
@@ -18,14 +18,14 @@ ema:
   decay: 0.995
 
 noise_scheduler:
-  num_diffusion_steps: 100  # 1000
+  num_diffusion_steps: 1000  # 1000
   beta_start: 1.0e-4
   beta_end: 0.02
 
 infer:
   trained_weights: weights/ddpm-mmnist-hard
-  num_frames_to_infer: 100
-  num_videos_to_generate: 2
+  num_frames_to_infer: 60
+  num_videos_to_generate: 1
 
 hierarchical_infer:
   total_num_frames_to_infer: 20
