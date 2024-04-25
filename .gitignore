@@ -46,3 +46,4 @@ weights
 .idea
 .DS_Store
 i3d_torchscript.pt
+*.mp4

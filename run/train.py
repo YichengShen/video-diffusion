@@ -31,6 +31,9 @@ def main():
         model=model,
         accelerator=accelerator)
 
+    # diffuser.load(cfg['infer']['trained_weights'])
+
+
     optimizer = partial(Adam, eps=1e-5)
     scheduler = partial(OneCycleLR, max_lr=cfg['learning_rate'], total_steps=cfg['train_steps'])
 
